@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'sinewave_app_webinar_registration_api',
     'sinewave_app_product_list_api',
     'webinar_data',
+    'sinewave_all_grt_Cust_AUC_and_Product_Details',
     'sinewave_app_get_profile_details',
 ]
 

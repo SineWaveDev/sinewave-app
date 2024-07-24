@@ -29,5 +29,6 @@ urlpatterns = [
     path('api/', include('sinewave_app_webinar_registration_api.urls')),
     path('api/', include('sinewave_app_product_list_api.urls')),
     path('api/', include('sinewave_app_get_profile_details.urls')),
+    path('api/', include('sinewave_all_grt_Cust_AUC_and_Product_Details.urls')),
     path('api/', include('webinar_data.urls')),
 ]
