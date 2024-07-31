@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     'webinar_data',
     'sinewave_all_grt_Cust_AUC_and_Product_Details',
     'sinewave_app_get_profile_details',
+    'sinewave_app_request_OTP_API',
+    'sinewave_app_reset_password_API',
+    'sinewave_app_verify_OTP_API',
 ]
 
 MIDDLEWARE = [

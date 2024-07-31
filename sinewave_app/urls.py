@@ -31,4 +31,8 @@ urlpatterns = [
     path('api/', include('sinewave_app_get_profile_details.urls')),
     path('api/', include('sinewave_all_grt_Cust_AUC_and_Product_Details.urls')),
     path('api/', include('webinar_data.urls')),
+    path('api/', include('sinewave_app_request_OTP_API.urls')),
+    path('api/', include('sinewave_app_reset_password_API.urls')),
+    path('api/', include('sinewave_app_verify_OTP_API.urls')),
+    
 ]
