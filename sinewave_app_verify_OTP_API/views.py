@@ -24,6 +24,7 @@ class VerifyOTPAPI(APIView):
         cursor = connection.cursor(as_dict=True)
         cursor.execute("SELECT TOP 1 OTP, TIMESTAMP FROM CS_OTP WHERE CUST_ID=%s ORDER BY TIMESTAMP DESC", (cust_id,))
         result = cursor.fetchone()
+        print("result:", result)
         connection.close()
 
         if not result:
