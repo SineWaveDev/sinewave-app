@@ -6,6 +6,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import random
+from datetime import datetime
 
 # Database connection parameters
 SERVER = '3.108.198.195'
@@ -16,11 +17,8 @@ PASSWORD = 'SW_02ITNETCOM'
 # Email configuration
 smtp_server = "smtp.gmail.com"
 smtp_port = 587
-username = "crm@sinewave.co.in"
-password = "fzjv eaaj kdcv svqr"
-# cc_email = "rupesh.k@sinewave.in"
-
-from datetime import datetime
+email_username = "crm@sinewave.co.in"
+email_password = "fzjv eaaj kdcv svqr"
 
 class RequestOTPAPI(APIView):
     def post(self, request, *args, **kwargs):
@@ -52,19 +50,24 @@ class RequestOTPAPI(APIView):
 
         # Send OTP email
         subject = "Your OTP for Password Reset"
-        body = f"Dear Customer,\n\nYour OTP for password reset is {otp}.\n\nThank you,\nSinewave"
+        body = (
+            f"Dear Customer,\n\n"
+            f"Your OTP for password reset is {otp}. It is valid for 2 minutes.\n\n"
+            f"Please do not share this OTP with anyone.\n\n"
+            f"Thank you,\n"
+            f"Sinewave Computer Services Pvt. Ltd"
+        )
         message = MIMEMultipart()
-        message["From"] = username
+        message["From"] = email_username
         message["To"] = email
-        # message["Cc"] = cc_email
         message["Subject"] = subject
         message.attach(MIMEText(body, "plain"))
 
         try:
             with smtplib.SMTP(smtp_server, smtp_port) as server:
                 server.starttls()
-                server.login(username, password)
-                server.sendmail(username, [email], message.as_string())
+                server.login(email_username, email_password)
+                server.sendmail(email_username, [email], message.as_string())
             return Response({"message": "OTP sent successfully"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
