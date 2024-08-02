@@ -34,11 +34,10 @@ class VerifyOTPAPI(APIView):
         otp_timestamp = result['TIMESTAMP']
         current_time = datetime.now()
 
-        if db_otp != str(otp):  # Convert request OTP to string and compare
+        if db_otp == str(otp):  # Convert request OTP to string and compare
+            if current_time - otp_timestamp > timedelta(minutes=2):
+                return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "OTP verified successfully"}, status=status.HTTP_200_OK)
+        else:
             return Response({"error": "Invalid OTP"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if current_time - otp_timestamp > timedelta(minutes=2):
-            return Response({"error": "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Assuming OTP verification is successful
-        return Response({"message": "OTP verified successfully"}, status=status.HTTP_200_OK)
