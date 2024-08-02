@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'sinewave_app_request_OTP_API',
     'sinewave_app_reset_password_API',
     'sinewave_app_verify_OTP_API',
+    'request_type',
 ]
 
 MIDDLEWARE = [
