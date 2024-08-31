@@ -2,17 +2,37 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 import pymssql
+import jwt
 
 # Connection parameters
 SERVER = '3.108.198.195'
 DATABASE = 'indiataxes_com_indiataxes'
 USERNAME = 'indiataxes_com_indiataxes'
 PASSWORD = 'SW_02ITNETCOM'
+SECRET_KEY = 'your_secret_key'  # Ensure this matches your login API's secret key
+
+def validate_jwt_token(token):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
 
 @api_view(['POST'])
 def add_webinar(request):
+    token = request.headers.get('Authorization')
+
+    if not token:
+        return Response({"error": "Token is required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    cust_id = validate_jwt_token(token)
+
+    if not cust_id:
+        return Response({"error": "Invalid or expired token"}, status=status.HTTP_401_UNAUTHORIZED)
+
     data = request.data
-    cust_id = data.get('cust_id')
     cust_pwd = data.get('cust_pwd')
     webinar_subject = data.get('webinar_subject')
     webinar_date = data.get('webinar_date')

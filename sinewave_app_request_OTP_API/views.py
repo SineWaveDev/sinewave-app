@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import random
 from datetime import datetime
+import jwt
 
 # Database connection parameters
 SERVER = '3.108.198.195'
@@ -20,14 +21,39 @@ smtp_port = 587
 email_username = "crm@sinewave.co.in"
 email_password = "fzjv eaaj kdcv svqr"
 
+# JWT Secret Key
+SECRET_KEY = 'your_secret_key'  # Replace with your actual secret key
+
+def validate_jwt_token(token):
+    try:
+        # Decode the JWT token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']  # Assuming the token payload includes the user_id
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
 class RequestOTPAPI(APIView):
     def post(self, request, *args, **kwargs):
+        # Extract the token from the Authorization header
+        token = request.headers.get('Authorization')
+        
+        if not token:
+            return Response({"error": "Token is required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Validate the token
+        user_id = validate_jwt_token(token)
+        
+        if not user_id:
+            return Response({"error": "Invalid or expired token"}, status=status.HTTP_401_UNAUTHORIZED)
+
         cust_id = request.data.get('cust_id')
 
         if not cust_id:
             return Response({"error": "Customer ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get email from database
+        # Get email from the database
         connection = pymssql.connect(SERVER, USERNAME, PASSWORD, DATABASE)
         cursor = connection.cursor(as_dict=True)
         cursor.execute("SELECT Email FROM CS_CUSTOMER WHERE CUST_ID=%s", (cust_id,))
@@ -43,7 +69,7 @@ class RequestOTPAPI(APIView):
         otp = random.randint(100000, 999999)
         timestamp = datetime.now()
 
-        # Save OTP to database
+        # Save OTP to the database
         cursor.execute("INSERT INTO CS_OTP (CUST_ID, OTP, TIMESTAMP) VALUES (%s, %s, %s)", (cust_id, otp, timestamp))
         connection.commit()
         connection.close()

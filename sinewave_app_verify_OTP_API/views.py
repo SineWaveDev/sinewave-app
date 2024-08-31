@@ -4,8 +4,9 @@ from rest_framework import status
 import pymssql
 from datetime import datetime, timedelta
 import logging
+import jwt
 
-# सेटअप लॉगिंग
+# Set up logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
@@ -15,9 +16,37 @@ DATABASE = 'indiataxes_com_indiataxes'
 USERNAME = 'indiataxes_com_indiataxes'
 PASSWORD = 'SW_02ITNETCOM'
 
+# JWT Secret Key
+SECRET_KEY = 'your_secret_key'  # Replace with your actual secret key
+
+def validate_jwt_token(token):
+    try:
+        # Decode the JWT token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload['user_id']  # Assuming the token payload includes the user_id
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
 class VerifyOTPAPI(APIView):
     def post(self, request, *args, **kwargs):
         logger.debug("Received request data: %s", request.data)
+        
+        # Extract the token from the Authorization header
+        token = request.headers.get('Authorization')
+        
+        if not token:
+            logger.warning("Token is missing")
+            return Response({"error": "Token is required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Validate the token
+        user_id = validate_jwt_token(token)
+        
+        if not user_id:
+            logger.warning("Invalid or expired token")
+            return Response({"error": "Invalid or expired token"}, status=status.HTTP_401_UNAUTHORIZED)
+
         cust_id = request.data.get('cust_id')
         otp = request.data.get('otp')
 
