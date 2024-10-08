@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import pymssql
 import jwt
+from datetime import datetime
 
 # Connection parameters
 SERVER = '3.108.198.195'
@@ -23,7 +24,7 @@ def validate_jwt_token(token):
     except jwt.InvalidTokenError:
         return None
 
-@api_view(['GET'])
+@api_view(['POST'])
 def get_webinar_details(request):
     # Extract token from the Authorization header
     token = request.headers.get('Authorization')
@@ -37,13 +38,37 @@ def get_webinar_details(request):
     if not user_id:
         return Response({"error": "Invalid or expired token"}, status=status.HTTP_401_UNAUTHORIZED)
 
+    # Extract date parameters from the request body
+    start_date = request.data.get('startDate')
+    end_date = request.data.get('endDate')
+
+    # Validate date format
+    try:
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+    except ValueError:
+        return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         # Connect to the database
         conn = pymssql.connect(server=SERVER, user=USERNAME, password=PASSWORD, database=DATABASE)
         cursor = conn.cursor(as_dict=True)
 
-        # Execute the query
-        cursor.execute('SELECT * FROM SINEWAVE_WEBINAR_MASTER')
+        # Construct the SQL query
+        query = 'SELECT * FROM SINEWAVE_WEBINAR_MASTER WHERE 1=1'
+        params = ()
+
+        if start_date:
+            query += ' AND webinar_date >= %s'
+            params += (start_date,)  # Add the start date to the tuple
+        if end_date:
+            query += ' AND webinar_date <= %s'
+            params += (end_date,)  # Add the end date to the tuple
+
+        # Execute the query with parameters
+        cursor.execute(query, params)
 
         # Fetch all results
         results = cursor.fetchall()
