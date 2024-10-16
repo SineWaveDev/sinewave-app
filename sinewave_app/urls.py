@@ -35,6 +35,8 @@ urlpatterns = [
     path('api/', include('sinewave_app_reset_password_API.urls')),
     path('api/', include('sinewave_app_verify_OTP_API.urls')),
     path('api/', include('request_type.urls')),
+    path('api/', include('Payment_History_API.urls')),
+    
     
     
 ]
