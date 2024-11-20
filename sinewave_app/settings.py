@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'sinewave_app_reset_password_API',
     'sinewave_app_verify_OTP_API',
     'Payment_History_API',
+    'Coin_Rewards_System',
     'request_type',
 ]
 
