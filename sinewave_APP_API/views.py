@@ -71,14 +71,20 @@ def check_credentials(request):
             
             cursor.execute("SELECT TOP 1 * FROM CS_LICENSE_SNVW WHERE CUST_ID = %s", (user_id,))
             license_data = cursor.fetchone()
-            
+
+            # Fetch the coin balance from UserRewardTransactions table
+            cursor.execute("SELECT SUM(transactionType) AS coin_balance FROM UserRewardTransactions WHERE userId = %s", (user_id,))
+            coin_balance_data = cursor.fetchone()
+            coin_balance = coin_balance_data['coin_balance'] if coin_balance_data else 0
+
             response_data = {
                 "status": True,
                 "token": token,
                 "customer_data": customer_data,
                 "customer_det_data": customer_det_data,
                 "customer_prod_data": customer_prod_data,
-                "license_data": license_data
+                "license_data": license_data,
+                "coin_balance": coin_balance  # Include the coin balance in the response
             }
             return Response(response_data, status=status.HTTP_200_OK)
         else:

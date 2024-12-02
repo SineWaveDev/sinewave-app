@@ -28,6 +28,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['http://sinewave-app.sinewave.co.in', 'localhost']
 
+APPEND_SLASH = False
+
+
 
 # Application definition
 
@@ -51,6 +54,7 @@ INSTALLED_APPS = [
     'sinewave_app_verify_OTP_API',
     'Payment_History_API',
     'Coin_Rewards_System',
+    'teams_calling_system',
     'request_type',
 ]
 
@@ -83,6 +87,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'sinewave_app.wsgi.application'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',  # Token Authentication
+        # or use other methods like OAuth2 if you have that configured
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
 
 
 # Database
