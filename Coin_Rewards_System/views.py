@@ -192,6 +192,8 @@ def get_user_balance(request, user_id):
 
 
 
+
+
 @api_view(['GET'])
 def log_transaction(request, user_id):
     try:
@@ -233,3 +235,5 @@ def log_transaction(request, user_id):
             cursor.close()
         if connection:
             connection.close()
+
+
