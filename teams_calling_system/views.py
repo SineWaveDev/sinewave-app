@@ -8,6 +8,8 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
 import datetime
+import os
+secret = os.getenv('AZURE_SECRET')
 
 
 # Database connection credentials
