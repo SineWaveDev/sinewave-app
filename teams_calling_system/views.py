@@ -4,11 +4,11 @@ import pymssql
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from rest_framework.decorators import api_view
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
 import datetime
+
 
 # Database connection credentials
 SERVER = '3.108.198.195'
@@ -47,6 +47,7 @@ class ScheduleMeeting(APIView):
     def post(self, request):
         # Step 1: Validate Input
         cust_name = request.data.get('cust_name')
+        cust_id = request.data.get('cust_id')
         cust_email = request.data.get('cust_email')
 
         if not cust_name or not cust_email:
@@ -106,11 +107,11 @@ class ScheduleMeeting(APIView):
             except requests.exceptions.RequestException as e:
                 print(f"Failed to fetch object ID for {email}: {str(e)}")
 
-        # Step 5: Check user presence
+      # Step 5: Check user presence
         available_users = []
-        
+
         for email, data in employee_data.items():
-            print("available:", data['id'])
+            print("Checking presence for:", data['id'])
             presence_url = f"https://graph.microsoft.com/v1.0/users/{data['id']}/presence"
             headers = {'Authorization': f'Bearer {access_token}'}
 
@@ -123,8 +124,21 @@ class ScheduleMeeting(APIView):
                     available_users.append({'email': email, 'object_id': data['id'], 'name': data['name']})
             except requests.exceptions.RequestException as e:
                 print(f"Failed to check presence for {email}: {str(e)}")
-        print("available_users:", available_users)
-        if not available_users:
+
+        # Print the list of all available users
+        if available_users:
+            print("\nList of all available users:")
+            for user in available_users:
+                print(f"Name: {user['name']}, Email: {user['email']}, Object ID: {user['object_id']}")
+        else:
+            print("\nNo available users found.")
+
+        # Randomly pick one available user if any exist
+        if available_users:
+            selected_user = random.choice(available_users)
+            print("\nSelected Executive:")
+            print(f"Name: {selected_user['name']}, Email: {selected_user['email']}, Object ID: {selected_user['object_id']}")
+        else:
             return Response({'error': 'All executives are busy. Please try again later or register for a call back.'}, status=400)
 
         # Step 6: Create the meeting
@@ -148,7 +162,6 @@ class ScheduleMeeting(APIView):
                     },
                     "type": "required"
                 }
-               
             ],
             "location": {
                 "displayName": "Online"
@@ -166,25 +179,140 @@ class ScheduleMeeting(APIView):
             'Content-Type': 'application/json'
         }
 
+        event_response = requests.post(event_url, json=event_data, headers=headers)
+        event_response.raise_for_status()
+        event_details = event_response.json()
+        # print("event_details:", event_details)
+
+        # Extract the meeting URL from the appropriate fields
+        join_url = event_details.get('onlineMeeting', {}).get('joinUrl') or event_details.get('onlineMeetingUrl') or event_details.get('webLink')
+
+
+
+        def fnGetQBTicketIDNo():
+            # Initialize ticket ID
+            functionReturnValue = ""
+
+            # Get the current date
+            today = datetime.datetime.today()
+            strYYYYMM = today.strftime("%Y%m")  # YYYYMM format
+
+            # Default maxID value
+            maxID = "0"
+
+            # Database connection credentials
+            SERVER = '3.108.198.195'
+            DATABASE = 'indiataxes_com_indiataxes'
+            USERNAME = 'indiataxes_com_indiataxes'
+            PASSWORD = 'SW_02ITNETCOM'
+
+            # Connect to the database using pymssql
+            conn = pymssql.connect(SERVER, USERNAME, PASSWORD, DATABASE)
+            cursor = conn.cursor()
+
+            # SQL query to fetch the current max ticket ID for the current month (YYYYMM)
+            cursor.execute("""
+                SELECT ISNULL(MAX(RIGHT(Ticket_ID, 5)), 0) AS MaxTicketId 
+                FROM indiataxes_com_indiataxes.S_CLIENT_QUERIES_TICKET 
+                WHERE LEFT(Ticket_ID, 6) = %s AND LEN(Ticket_ID) = 12 AND Query_Source_ID = 2
+            """, (strYYYYMM,))
+
+            # Fetch the result
+            result = cursor.fetchone()
+
+            if result and result[0] is not None:
+                maxID = int(result[0]) + 1  # Increment the last maxID by 1
+            else:
+                maxID = 1  # If no ticket ID exists, start with 1
+
+            # Format maxID to be 5 digits
+            maxID = str(maxID).zfill(5)
+
+            # Concatenate the final Ticket ID
+            ticketID = f"{strYYYYMM}2{maxID}"
+
+            # Close the database connection
+            cursor.close()
+            conn.close()
+
+            # Return the generated ticket ID
+            return ticketID
+
+        # Print the new ticket ID
+        
+                
         try:
-            event_response = requests.post(event_url, json=event_data, headers=headers)
-            event_response.raise_for_status()
-            event_details = event_response.json()
-            print("event_details:", event_details)
+            # Hardcoded values for other columns
+            cust_id = cust_id
+            prod_id = 5
+            query = 'tbs'
+            emp_id = 1194
+            status = 2
+            email = selected_user.get('email')  # Use the email of the selected executive
+            current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            transfer_to_emp_id = '8951'
+            query_source_id = 2255
+            transfer_to = '8951'
+            request_type = 'get'
+            teams_emp_id = 1194
 
-            # Extract the meeting URL from the appropriate fields
-            join_url = event_details.get('onlineMeeting', {}).get('joinUrl') or event_details.get('onlineMeetingUrl') or event_details.get('webLink')
+            # Generate the ticket ID
+            ticket_id = fnGetQBTicketIDNo()
+            print("ticket_id:", ticket_id)
 
+            # Dynamic values
+            Team_url = join_url  # Replace with actual Teams URL
+
+            # Hardcoded Insert query with all fields
+            insert_query = f"""
+                INSERT INTO [indiataxes_com_indiataxes].[S_CLIENT_QUERIES_TICKET]
+                ([CUST_ID], [PROD_ID], [QUERY], [EMP_ID], [STATUS], [EMAIL], [DATE], 
+                [Ticket_ID], [TRANSFER_TO_EMP_ID], [QUERY_SOURCE_ID], [TRANSFER_TO], 
+                [REQUEST_TYPE], [TeamsUrl], [Teams_EmpId])
+                VALUES
+                ({cust_id}, {prod_id}, '{query}', {emp_id}, {status}, '{email}', '{current_datetime}', 
+                '{ticket_id}', '{transfer_to_emp_id}', {query_source_id}, '{transfer_to}', 
+                '{request_type}', '{Team_url}', {teams_emp_id});
+            """ 
+
+            print("insert_query:", insert_query)
+
+            # Connect to the database
+            connection = get_db_connection()
+            cursor = connection.cursor()
+
+            try:
+                # Execute the hardcoded insert query
+                cursor.execute(insert_query)
+
+                # Commit the transaction
+                connection.commit()
+                print("Meeting details successfully added to the database.")
+
+            except pymssql.DatabaseError as e:
+                print(f"Database error while inserting meeting details: {str(e)}")
+                return Response({'error': f'Database error: {str(e)}'}, status=500)
+
+            finally:
+                # Ensure the connection is closed
+                if cursor:
+                    cursor.close()
+                if connection:
+                    connection.close()
+            # Prepare the response
             return Response({
                 'message': 'Meeting created successfully',
-                'meeting_url': join_url,  # Ensure this field correctly retrieves the join URL
-                'attendees': event_details.get('attendees'),
+                'meeting_url': join_url,
+                'attendees': event_details.get('attendees', []),
                 'selected_executive': {
-                    'email': selected_user['email'],
-                    'name': selected_user['name'],
-                    'object_id': selected_user['object_id'],
+                    'email': selected_user.get('email'),
+                    'name': selected_user.get('name'),
+                    'object_id': selected_user.get('object_id'),
                 }
             }, status=201)
+
         except requests.exceptions.RequestException as e:
             return Response({'error': f'Failed to create the meeting: {str(e)}'}, status=400)
 
+        except pymssql.DatabaseError as e:
+            return Response({'error': f'Failed to update employee record: {str(e)}'}, status=500)
