@@ -248,15 +248,15 @@ class ScheduleMeeting(APIView):
             cust_id = cust_id
             prod_id = 5
             query = 'tbs'
-            emp_id = 1194
+            emp_id = 2222
             status = 2
             email = selected_user.get('email')  # Use the email of the selected executive
             current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            transfer_to_emp_id = '8951'
+            transfer_to_emp_id = '1111'
             query_source_id = 2255
-            transfer_to = '8951'
+            transfer_to = '1111'
             request_type = 'get'
-            teams_emp_id = 1194
+            teams_emp_id = 2222
 
             # Generate the ticket ID
             ticket_id = fnGetQBTicketIDNo()
