@@ -73,7 +73,7 @@ class ScheduleMeeting(APIView):
 
         # Step 3: Fetch employees from the database
         query = """
-            SELECT NEW_EMP_ID, F_NAME + L_NAME AS Name, EMAIL
+            SELECT EMP_ID, F_NAME + L_NAME AS Name, EMAIL
             FROM CS_EMPLOYEE
             WHERE DISCONTINUE='0' AND DEPARTMENT='10' AND TEAM='C' AND EMP_ID != '100202'
         """
@@ -136,15 +136,54 @@ class ScheduleMeeting(APIView):
             print("\nNo available users found.")
 
         # Randomly pick one available user if any exist
+        # After checking presence and selecting an available user:
         if available_users:
             selected_user = random.choice(available_users)
             print("\nSelected Executive:")
             print(f"Name: {selected_user['name']}, Email: {selected_user['email']}, Object ID: {selected_user['object_id']}")
+
+            # Step: Fetch EMP_ID from the database using the selected user's email
+            selected_email = selected_user['email']
+            emp_id = None
+
+            try:
+                # Fetch EMP_ID for the selected employee from the database
+                query = """
+                    SELECT EMP_ID
+                    FROM CS_EMPLOYEE
+                    WHERE EMAIL = %s AND DISCONTINUE = '0' AND DEPARTMENT = '10' AND TEAM = 'C' AND EMP_ID != '100202'
+                """
+                connection = get_db_connection()
+                cursor = connection.cursor()
+                cursor.execute(query, (selected_email,))
+                result = cursor.fetchone()
+
+                if result:
+                    emp_id = result[0]  # Retrieve the EMP_ID for the selected employee
+                    print(f"EMP_ID for {selected_user['name']} is {emp_id}")
+                else:
+                    print(f"No EMP_ID found for {selected_user['name']} with email {selected_email}")
+
+            except pymssql.DatabaseError as e:
+                print(f"Database error while fetching EMP_ID: {str(e)}")
+            finally:
+                # Ensure the connection is closed
+                if cursor:
+                    cursor.close()
+                if connection:
+                    connection.close()
+
+            # # Use the fetched emp_id as the teams_emp_id
+            # teams_emp_id = emp_id if emp_id else 2222  # Default to 2222 if no EMP_ID found
+
         else:
             return Response({'error': 'All executives are busy. Please try again later or register for a call back.'}, status=400)
 
-        # Step 6: Create the meeting
-        selected_user = random.choice(available_users)
+# Proceed with the rest of the logic using teams_emp_id
+
+
+        # # Step 6: Create the meeting
+        # selected_user = random.choice(available_users)
         event_url = "https://graph.microsoft.com/v1.0/users/admin@sinewave.in/events"
         event_data = {
             "subject": "Team Sync Meeting",
@@ -246,17 +285,19 @@ class ScheduleMeeting(APIView):
         try:
             # Hardcoded values for other columns
             cust_id = cust_id
-            prod_id = 5
+            prod_id = 1
             query = 'tbs'
-            emp_id = 2222
+            emp_id = emp_id
             status = 2
             email = selected_user.get('email')  # Use the email of the selected executive
             current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            transfer_to_emp_id = '1111'
-            query_source_id = 2255
-            transfer_to = '1111'
+            transfer_to_emp_id = emp_id
+            query_source_id = 2
+            transfer_to = emp_id
             request_type = 'get'
-            teams_emp_id = 2222
+            teams_emp_id = emp_id
+            add_in_library = 0
+            is_published = 0
 
             # Generate the ticket ID
             ticket_id = fnGetQBTicketIDNo()
@@ -270,11 +311,11 @@ class ScheduleMeeting(APIView):
                 INSERT INTO [indiataxes_com_indiataxes].[S_CLIENT_QUERIES_TICKET]
                 ([CUST_ID], [PROD_ID], [QUERY], [EMP_ID], [STATUS], [EMAIL], [DATE], 
                 [Ticket_ID], [TRANSFER_TO_EMP_ID], [QUERY_SOURCE_ID], [TRANSFER_TO], 
-                [REQUEST_TYPE], [TeamsUrl], [Teams_EmpId])
+                [REQUEST_TYPE], [TeamsUrl], [Teams_EmpId], [ADD_IN_LIBRARY], [IS_PUBLISHED])
                 VALUES
                 ({cust_id}, {prod_id}, '{query}', {emp_id}, {status}, '{email}', '{current_datetime}', 
                 '{ticket_id}', '{transfer_to_emp_id}', {query_source_id}, '{transfer_to}', 
-                '{request_type}', '{Team_url}', {teams_emp_id});
+                '{request_type}', '{Team_url}', {teams_emp_id}, {add_in_library}, {is_published});
             """ 
 
             print("insert_query:", insert_query)

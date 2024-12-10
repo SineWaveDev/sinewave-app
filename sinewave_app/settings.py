@@ -88,17 +88,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'sinewave_app.wsgi.application'
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',  # Token Authentication
-        # or use other methods like OAuth2 if you have that configured
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-}
-
-
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
