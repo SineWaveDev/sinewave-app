@@ -51,26 +51,47 @@ def check_credentials(request):
     try:
         connection = get_db_connection()
         cursor = connection.cursor(as_dict=True)
-        
+
         # Authenticate user
         query = "SELECT CUST_ID, CUST_PWD FROM CS_CUSTOMER WHERE CUST_ID = %s"
         cursor.execute(query, (user_id,))
         user = cursor.fetchone()
 
         if user and user['CUST_PWD'] == user_pwd:
+            # Check logincount in sinewaveApp_LoginStatus
+            cursor.execute("SELECT logincount FROM sinewaveApp_LoginStatus WHERE cust_id = %s", (user_id,))
+            login_status = cursor.fetchone()
+
+            if login_status and login_status['logincount'] == 0:
+                # Add 100 coins to UserRewardTransactions
+                cursor.execute("""
+                    INSERT INTO UserRewardTransactions (user_id, transactionType, coins_awarded)
+                    VALUES (%s, 'Credit', 100)
+                """, (user_id,))
+
+                # Update logincount to 1
+                cursor.execute("""
+                    UPDATE sinewaveApp_LoginStatus SET logincount = 1 WHERE cust_id = %s
+                """, (user_id,))
+            elif not login_status:
+                # Insert a new row if the user is logging in for the first time
+                cursor.execute("""
+                    INSERT INTO sinewaveApp_LoginStatus (cust_id, logincount) VALUES (%s, 1)
+                """, (user_id,))
+
             # Generate a new token
             token = generate_jwt_token(user_id)
 
             # Fetch data from other tables
             cursor.execute("SELECT TOP 1 * FROM CS_CUSTOMER WHERE CUST_ID = %s", (user_id,))
             customer_data = cursor.fetchone()
-            
+
             cursor.execute("SELECT TOP 1 * FROM CS_CUSTOMER_DET WHERE CUST_ID = %s", (user_id,))
             customer_det_data = cursor.fetchone()
-            
+
             cursor.execute("SELECT TOP 1 * FROM CS_CUST_PROD WHERE CUST_ID = %s", (user_id,))
             customer_prod_data = cursor.fetchone()
-            
+
             cursor.execute("SELECT TOP 1 * FROM CS_LICENSE_SNVW WHERE CUST_ID = %s", (user_id,))
             license_data = cursor.fetchone()
 
@@ -95,13 +116,14 @@ def check_credentials(request):
                 "license_data": license_data,
                 "coin_balance": coin_balance  # Include the coin balance in the response
             }
+            connection.commit()
             return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response({"status": False, "error": "Incorrect user ID or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
     except Exception as e:
         return Response({"status": False, "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
     finally:
         cursor.close()
         connection.close()
