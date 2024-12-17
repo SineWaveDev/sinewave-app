@@ -57,27 +57,44 @@ def check_credentials(request):
         cursor.execute(query, (user_id,))
         user = cursor.fetchone()
 
+        
+
         if user and user['CUST_PWD'] == user_pwd:
             # Check logincount in sinewaveApp_LoginStatus
             cursor.execute("SELECT logincount FROM sinewaveApp_LoginStatus WHERE cust_id = %s", (user_id,))
             login_status = cursor.fetchone()
 
-            if login_status and login_status['logincount'] == 0:
+            first_login = False
+
+            if login_status:  # If cust_id exists in sinewaveApp_LoginStatus
+                if login_status['logincount'] == 0:
+                    # Add 100 coins to UserRewardTransactions
+                    cursor.execute("""
+                        INSERT INTO UserRewardTransactions (user_id, transactionType, coins_awarded)
+                        VALUES (%s, 'Credit', 100)
+                    """, (user_id,))
+                    print("100 credits awarded for first login.")
+
+                # Increment logincount by 1
+                cursor.execute("""
+                    UPDATE sinewaveApp_LoginStatus
+                    SET logincount = logincount + 1
+                    WHERE cust_id = %s
+                """, (user_id,))
+            else:  # If cust_id is not found in sinewaveApp_LoginStatus table
                 # Add 100 coins to UserRewardTransactions
                 cursor.execute("""
                     INSERT INTO UserRewardTransactions (user_id, transactionType, coins_awarded)
                     VALUES (%s, 'Credit', 100)
                 """, (user_id,))
+                print("New customer login detected. 100 credits awarded.")
 
-                # Update logincount to 1
+                # Insert a new row in sinewaveApp_LoginStatus with logincount = 1
                 cursor.execute("""
-                    UPDATE sinewaveApp_LoginStatus SET logincount = 1 WHERE cust_id = %s
+                    INSERT INTO sinewaveApp_LoginStatus (cust_id, logincount)
+                    VALUES (%s, 1)
                 """, (user_id,))
-            elif not login_status:
-                # Insert a new row if the user is logging in for the first time
-                cursor.execute("""
-                    INSERT INTO sinewaveApp_LoginStatus (cust_id, logincount) VALUES (%s, 1)
-                """, (user_id,))
+                first_login = True
 
             # Generate a new token
             token = generate_jwt_token(user_id)
@@ -114,7 +131,8 @@ def check_credentials(request):
                 "customer_det_data": customer_det_data,
                 "customer_prod_data": customer_prod_data,
                 "license_data": license_data,
-                "coin_balance": coin_balance  # Include the coin balance in the response
+                "coin_balance": coin_balance,  # Include the coin balance in the response
+                "FirstLogin": first_login  
             }
             connection.commit()
             return Response(response_data, status=status.HTTP_200_OK)
