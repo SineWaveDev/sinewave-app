@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'Coin_Rewards_System',
     'teams_calling_system',
     'delete_record_from_UserRewardTransactions_Table',
+    'sinewaveApp_LoginStatus_Delete_Login_Count',
     'request_type',
 ]
 

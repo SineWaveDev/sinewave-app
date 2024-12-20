@@ -39,9 +39,7 @@ urlpatterns = [
     path('api/', include('Coin_Rewards_System.urls')),
     path('api/', include('teams_calling_system.urls')),
     path('api/', include('delete_record_from_UserRewardTransactions_Table.urls')),
-    
-    
-    
+    path('api/', include('sinewaveApp_LoginStatus_Delete_Login_Count.urls')),
     
     
     
