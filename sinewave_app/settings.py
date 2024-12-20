@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'Payment_History_API',
     'Coin_Rewards_System',
     'teams_calling_system',
+    'delete_record_from_UserRewardTransactions_Table',
     'request_type',
 ]
 

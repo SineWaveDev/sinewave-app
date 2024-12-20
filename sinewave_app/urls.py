@@ -38,6 +38,8 @@ urlpatterns = [
     path('api/', include('Payment_History_API.urls')),
     path('api/', include('Coin_Rewards_System.urls')),
     path('api/', include('teams_calling_system.urls')),
+    path('api/', include('delete_record_from_UserRewardTransactions_Table.urls')),
+    
     
     
     
