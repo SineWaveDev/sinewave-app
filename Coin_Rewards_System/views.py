@@ -215,10 +215,11 @@ def log_transaction(request, user_id):
                 "transaction_id": transaction[0],
                 "user_id": transaction[1],
                 "action_type": transaction[2],
-                "transaction_type": transaction[3],  # Includes transactionType (Debit/Credit)
-                "coins_awarded": transaction[4],
-                "timestamp": transaction[5]
-            })
+
+                "transaction_type": transaction[5],
+                "coins_awarded": transaction[3],
+                "timestamp": transaction[4]
+                })
 
         # Return the response with all transactions for the user
         return Response({
