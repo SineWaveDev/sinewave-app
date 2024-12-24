@@ -78,66 +78,93 @@ def user_login(request):
 
 
 
+
+
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Add this line
+@permission_classes([AllowAny])
 def update_coins(request):
     user_id = request.data.get('userId')
     action_type = request.data.get('actionType')
     coins_earned = request.data.get('coinsEarned')
-    transactionType = request.data.get('transactionType')  # New field
+    transaction_type = request.data.get('transactionType')
+
+    valid_action_types = ["Facebook", "Instagram", "Twitter", "LinkedIn", "YouTube"]
+
+    connection = None
+    cursor = None
 
     try:
-        if not user_id or not action_type or coins_earned is None or not transactionType:
+        if not user_id or not action_type or coins_earned is None or not transaction_type:
             return Response({
-                "status": "error", 
+                "status": "error",
                 "message": "All fields (userId, actionType, coinsEarned, transactionType) are required."
             }, status=400)
 
-        coins_earned = int(coins_earned)
-        if transactionType not in ["Credit", "Debit"]:
+        if action_type not in valid_action_types:
             return Response({
-                "status": "error", 
+                "status": "error",
+                "message": f"actionType must be one of {valid_action_types}."
+            }, status=400)
+
+        coins_earned = int(coins_earned)
+        if transaction_type not in ["Credit", "Debit"]:
+            return Response({
+                "status": "error",
                 "message": "transactionType must be either 'Credit' or 'Debit'."
             }, status=400)
 
         # Fetch user from the external SQL database
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("SELECT coin_balance FROM UserAccounts WHERE user_id = %s", (user_id,))
+        cursor.execute("SELECT coin_balance, userSocialStatus FROM UserAccounts WHERE user_id = %s", (user_id,))
         user_data = cursor.fetchone()
 
         if user_data is None:
-            if transactionType == "Debit":
+            if transaction_type == "Debit":
                 return Response({
                     "status": "error",
                     "message": "Cannot perform Debit transaction for a non-existent user."
                 }, status=400)
 
             # Insert new user if not found and transaction type is Credit
-            cursor.execute("INSERT INTO UserAccounts (user_id, coin_balance) VALUES (%s, %s)", (user_id, coins_earned))
+            cursor.execute(
+                "INSERT INTO UserAccounts (user_id, coin_balance, userSocialStatus) VALUES (%s, %s, %s)",
+                (user_id, coins_earned, action_type)
+            )
             new_balance = coins_earned
         else:
             current_balance = user_data[0]
+            user_social_status = user_data[1] or ""
 
-            if transactionType == "Credit":
+            if action_type in user_social_status.split(','):
+                return Response({
+                    "status": "error",
+                    "message": f"{action_type} is already logged in for this user."
+                }, status=400)
+
+            if transaction_type == "Credit":
                 new_balance = current_balance + coins_earned
-            elif transactionType == "Debit":
+            elif transaction_type == "Debit":
                 if coins_earned > current_balance:
                     return Response({
-                        "status": "error", 
+                        "status": "error",
                         "message": "Insufficient balance for Debit transaction."
                     }, status=400)
                 new_balance = current_balance - coins_earned
 
-            # Update existing user's coin balance
-            cursor.execute("UPDATE UserAccounts SET coin_balance = %s WHERE user_id = %s", (new_balance, user_id))
+            # Update existing user's coin balance and userSocialStatus
+            updated_social_status = ','.join(set(user_social_status.split(',') + [action_type]))
+            cursor.execute(
+                "UPDATE UserAccounts SET coin_balance = %s, userSocialStatus = %s WHERE user_id = %s",
+                (new_balance, updated_social_status, user_id)
+            )
 
         connection.commit()
 
         # Log the transaction
         cursor.execute(
             "INSERT INTO UserRewardTransactions (user_id, action_type, transactionType, coins_awarded, timestamp) VALUES (%s, %s, %s, %s, %s)",
-            (user_id, action_type, transactionType, coins_earned, timezone.now())
+            (user_id, action_type, transaction_type, coins_earned, timezone.now())
         )
         connection.commit()
 
@@ -145,7 +172,7 @@ def update_coins(request):
             "status": "success",
             "new_balance": new_balance,
             "action_type": action_type,
-            "transactionType": transactionType,
+            "transactionType": transaction_type,
             "coins_earned": coins_earned,
         })
 
@@ -157,6 +184,7 @@ def update_coins(request):
             cursor.close()
         if connection:
             connection.close()
+
 
 
 
