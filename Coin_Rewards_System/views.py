@@ -266,3 +266,34 @@ def log_transaction(request, user_id):
             connection.close()
 
 
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def delete_all_user_accounts(request):
+    connection = None
+    cursor = None
+
+    try:
+        # Establish a database connection
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Delete all records from the UserAccounts table
+        cursor.execute("DELETE FROM UserAccounts")
+        connection.commit()
+
+        return Response({
+            "status": "success",
+            "message": "All records have been deleted from the UserAccounts table."
+        }, status=200)
+
+    except pymssql.Error as e:
+        return Response({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
+
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()

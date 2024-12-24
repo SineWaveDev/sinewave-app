@@ -6,5 +6,7 @@ urlpatterns = [
     path('user/update_coins/', views.update_coins, name='update_coins'),
     path('user/balance/<str:user_id>/', views.get_user_balance, name='get_user_balance'),
     path('user/log_transaction/<str:user_id>/', views.log_transaction, name='log_transaction'),
+    path('useraccounts/delete_all', views.delete_all_user_accounts, name='delete_all_user_accounts'),
+    
     
 ]
