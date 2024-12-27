@@ -159,6 +159,7 @@ class CreateMeetingView(APIView):
             teams_emp_id = emp_id
             add_in_library = 0
             is_published = 0
+            QueryFrom = "WTU"
 
             # Dynamic values for Teams URL and other fields
             Team_url = join_url
@@ -168,15 +169,15 @@ class CreateMeetingView(APIView):
                 INSERT INTO [indiataxes_com_indiataxes].[S_CLIENT_QUERIES_TICKET]
                 ([CUST_ID], [PROD_ID], [QUERY], [EMP_ID], [STATUS], [EMAIL], [DATE], 
                 [Ticket_ID], [TRANSFER_TO_EMP_ID], [QUERY_SOURCE_ID], [TRANSFER_TO], 
-                [REQUEST_TYPE], [WaitingUrl], [Teams_EmpId], [ADD_IN_LIBRARY], [IS_PUBLISHED], [TeamsName], [TeamsContact], [TeamsEmailid])
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                [REQUEST_TYPE], [WaitingUrl], [Teams_EmpId], [ADD_IN_LIBRARY], [IS_PUBLISHED], [TeamsName], [TeamsContact], [TeamsEmailid], [QueryFrom])
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
             """
 
             query_values = (
                 cust_id, 1, query, emp_id, status, email, current_datetime,
                 ticket_id, transfer_to_emp_id, query_source_id, transfer_to, 
                 request_type, Team_url, teams_emp_id, add_in_library, is_published, 
-                cust_name, cust_monile, cust_email
+                cust_name, cust_monile, cust_email, QueryFrom
             )
 
             print("insert_query:",insert_query)
