@@ -147,12 +147,12 @@ class CreateMeetingView(APIView):
 
         # Step 5: Insert Meeting Details into the Database
         try:
-            emp_id = 1  # Assuming emp_id is provided or fetched based on business logic
+            emp_id = 0  # Assuming emp_id is provided or fetched based on business logic
             query = query
             status = 2
             email = cust_email  # Use the customer email as the email for the meeting
             current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            transfer_to_emp_id = emp_id
+            transfer_to_emp_id = 0
             query_source_id = 2
             transfer_to = 0
             request_type = 'get'
