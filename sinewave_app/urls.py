@@ -23,6 +23,7 @@ from drf_yasg import openapi
 
 
 urlpatterns = [
+    path('admin/', admin.site.urls),  # This line enables the admin page
     path('api/', include('sinewave_APP_API.urls')),
     path('api/', include('sinewave_app_callback_register.urls')),
     path('api/', include('sinewave_update_profile_api.urls')),
@@ -40,6 +41,8 @@ urlpatterns = [
     path('api/', include('teams_calling_system.urls')),
     path('api/', include('delete_record_from_UserRewardTransactions_Table.urls')),
     path('api/', include('sinewaveApp_LoginStatus_Delete_Login_Count.urls')),
+    path('api/', include('Teams_Calling_System_Queue_Management.urls')),
+    
     
     
     

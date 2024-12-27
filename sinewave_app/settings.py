@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'teams_calling_system',
     'delete_record_from_UserRewardTransactions_Table',
     'sinewaveApp_LoginStatus_Delete_Login_Count',
+    'Teams_Calling_System_Queue_Management',
     'request_type',
 ]
 
