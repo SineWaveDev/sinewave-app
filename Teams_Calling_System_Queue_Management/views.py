@@ -152,9 +152,7 @@ class CreateMeetingView(APIView):
             status = 2
             email = cust_email  # Use the customer email as the email for the meeting
             current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            transfer_to_emp_id = 0
             query_source_id = 2
-            transfer_to = 0
             request_type = 'get'
             teams_emp_id = emp_id
             add_in_library = 0
@@ -168,14 +166,14 @@ class CreateMeetingView(APIView):
             insert_query = """
                 INSERT INTO [indiataxes_com_indiataxes].[S_CLIENT_QUERIES_TICKET]
                 ([CUST_ID], [PROD_ID], [QUERY], [EMP_ID], [STATUS], [EMAIL], [DATE], 
-                [Ticket_ID], [TRANSFER_TO_EMP_ID], [QUERY_SOURCE_ID], [TRANSFER_TO], 
+                [Ticket_ID], [QUERY_SOURCE_ID],
                 [REQUEST_TYPE], [WaitingUrl], [Teams_EmpId], [ADD_IN_LIBRARY], [IS_PUBLISHED], [TeamsName], [TeamsContact], [TeamsEmailid], [QueryFrom])
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
             """
 
             query_values = (
                 cust_id, 1, query, emp_id, status, email, current_datetime,
-                ticket_id, transfer_to_emp_id, query_source_id, transfer_to, 
+                ticket_id, query_source_id, 
                 request_type, Team_url, teams_emp_id, add_in_library, is_published, 
                 cust_name, cust_monile, cust_email, QueryFrom
             )
